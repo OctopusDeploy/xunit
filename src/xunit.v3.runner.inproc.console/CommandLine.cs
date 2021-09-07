@@ -61,6 +61,14 @@ namespace Xunit.Runner.InProc.SystemConsole
 		}
 
 		/// <summary>
+		/// <para>Option: -tcp</para>
+		/// <para>When set, indicates that the runner should connected to the given TCP
+		/// port and communicate using the v3 runner protocol. Valid values are integers
+		/// between 1024 and 65535.</para>
+		/// </summary>
+		public int? TcpPort { get; protected set; }
+
+		/// <summary>
 		/// Chooses a reporter from the list of available reporters. Unless
 		/// <see cref="Project"/>.<see cref="XunitProject.Configuration"/>.<see cref="TestProjectConfiguration.NoAutoReporters"/>
 		/// is set to <c>true</c>, it will first look for an environmentally enabled reporter;
@@ -78,6 +86,9 @@ namespace Xunit.Runner.InProc.SystemConsole
 			foreach (var unknownOption in unknownOptions)
 			{
 				var reporter = reporters.FirstOrDefault(r => r.RunnerSwitch == unknownOption) ?? throw new ArgumentException($"unknown option: -{unknownOption}");
+
+				if (TcpPort.HasValue)
+					throw new ArgumentException($"cannot specify -{reporter.RunnerSwitch} when using -tcp");
 
 				if (result != null)
 					throw new ArgumentException("only one reporter is allowed");
@@ -242,6 +253,7 @@ namespace Xunit.Runner.InProc.SystemConsole
 					project.Configuration.List = list ?? throw new ArgumentException("invalid argument for -list");
 					project.Configuration.NoLogo = true;
 				}
+
 				else if (optionName == "maxthreads")
 				{
 					if (option.Value == null)
@@ -383,6 +395,16 @@ namespace Xunit.Runner.InProc.SystemConsole
 					GuardNoOptionValue(option);
 					foreach (var projectAssembly in project.Assemblies)
 						projectAssembly.Configuration.StopOnFail = true;
+				}
+				else if (optionName == "tcp")
+				{
+					if (option.Value == null)
+						throw new ArgumentException("missing argument for -tcp");
+
+					if (!int.TryParse(option.Value, out var port) || port < 1024 || port > 65535)
+						throw new ArgumentException($"incorrect argument value for -tcp (must be an integer between 1024 and 65535)");
+
+					TcpPort = port;
 				}
 				else if (optionName == "trait")
 				{

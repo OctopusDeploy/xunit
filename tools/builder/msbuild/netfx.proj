@@ -13,6 +13,7 @@
 	<ItemGroup>
 		<TestV1Assemblies Include="$(SolutionDir)src\xunit.v1.tests\bin\$(Configuration)\net4*\xunit.v1.tests.dll" />
 		<TestV2Assemblies Include="$(SolutionDir)src\xunit.v2.tests\bin\$(Configuration)\net4*\xunit.v2.tests.dll" />
+		<TestV3Assemblies Include="$(SolutionDir)src\**\bin\$(Configuration)\net4*\xunit.v3.*.tests.exe" />
 	</ItemGroup>
 
 	<Target Name="Default" />
@@ -26,7 +27,7 @@
 	</Target>
 
 	<Target Name="TestV3">
-		<Warning Text="xUnit.net v3 tests are not supported by the MSBuild runner yet" />
+		<xunit Assemblies="@(TestV3Assemblies)" />
 	</Target>
 
 </Project>

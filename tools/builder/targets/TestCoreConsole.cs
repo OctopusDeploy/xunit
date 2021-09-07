@@ -14,16 +14,17 @@ public static class TestCoreConsole
 		context.BuildStep("Running .NET Core tests (via Console runner)");
 
 		// v3 (default bitness)
-		// TODO: Convert to console runner when it's available
 		var netCoreSubpath = Path.Combine("bin", context.ConfigurationText, "netcoreapp");
+		var v3OutputFileName = Path.Combine(context.TestOutputFolder, "xunit.v3.tests-netcoreapp");
 		var v3TestDlls =
 			Directory
 				.GetFiles(context.BaseFolder, "xunit.v3.*.tests.dll", SearchOption.AllDirectories)
-				.Where(x => x.Contains(netCoreSubpath))
-				.OrderBy(x => x)
-				.Select(x => x.Substring(context.BaseFolder.Length + 1));
+				.Where(x => x.Contains(netCoreSubpath));
 
-		foreach (var v3TestDll in v3TestDlls)
+#if false
+		await context.Exec(context.ConsoleRunnerExe, $"\"{string.Join("\" \"", v3TestDlls)}\" {context.TestFlagsParallel}-xml \"{v3OutputFileName}.xml\" -html \"{v3OutputFileName}.html\"");
+#else
+		foreach (var v3TestDll in v3TestDlls.OrderBy(x => x))
 		{
 			var fileName = Path.GetFileName(v3TestDll);
 			var folder = Path.GetDirectoryName(v3TestDll);
@@ -31,6 +32,7 @@ public static class TestCoreConsole
 
 			await context.Exec("dotnet", $"exec {fileName} {context.TestFlagsParallel}-preenumeratetheories -xml \"{outputFileName}.xml\" -html \"{outputFileName}.html\"", workingDirectory: folder);
 		}
+#endif
 
 		// Only run 32-bit .NET Core tests on Windows
 		if (context.NeedMono)
@@ -50,17 +52,19 @@ public static class TestCoreConsole
 		var v3x86TestDlls =
 			Directory
 				.GetFiles(context.BaseFolder, "xunit.v3.*.tests.x86.dll", SearchOption.AllDirectories)
-				.Where(x => x.Contains(netCore32Subpath))
-				.OrderBy(x => x)
-				.Select(x => x.Substring(context.BaseFolder.Length + 1));
+				.Where(x => x.Contains(netCore32Subpath));
 
-		foreach (var v3x86TestDll in v3x86TestDlls)
+#if false
+		await context.Exec(context.ConsoleRunnerExe, $"\"{string.Join("\" \"", v3x86TestDlls)}\" {context.TestFlagsParallel}-xml \"{v3OutputFileName}-x86.xml\" -html \"{v3OutputFileName}-x86.html\"");
+#else
+		foreach (var v3x86TestDll in v3x86TestDlls.OrderBy(x => x))
 		{
 			var fileName = Path.GetFileName(v3x86TestDll);
 			var folder = Path.GetDirectoryName(v3x86TestDll);
-			var outputFileName = Path.Combine(context.TestOutputFolder, Path.GetFileNameWithoutExtension(v3x86TestDll) + "-" + Path.GetFileName(folder));
+			var outputFileName = Path.Combine(context.TestOutputFolder, Path.GetFileNameWithoutExtension(v3x86TestDll) + "-" + Path.GetFileName(folder) + "-x86");
 
-			await context.Exec(x86Dotnet, $"exec {fileName} {context.TestFlagsParallel}-preenumeratetheories -xml \"{outputFileName}-x86.xml\" -html \"{outputFileName}-x86.html\"", workingDirectory: folder);
+			await context.Exec(x86Dotnet, $"exec {fileName} {context.TestFlagsParallel}-preenumeratetheories -xml \"{outputFileName}.xml\" -html \"{outputFileName}.html\"", workingDirectory: folder);
 		}
+#endif
 	}
 }

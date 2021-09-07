@@ -5,6 +5,5 @@
   "maxParallelThreads": "unlimited",
   "methodDisplay": "classAndMethod",
   "parallelizeAssembly": true,
-  "parallelizeTestCollections": true,
-  "preEnumerateTheories": false
+  "parallelizeTestCollections": true
 }
